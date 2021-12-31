@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import tw from 'twrnc';
 import {
 	Image,
 	View,
@@ -119,15 +120,11 @@ export function Screen() {
 			? { panHandlers }
 			: useRef(PanResponder.create(panHandlers)).current;
 	return (
-		<View style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+		<View style={tw`w-full h-full overflow-hidden`}>
 			<Image
 				{...panResponder.panHandlers}
 				source={{ uri }}
-				style={{
-					width: "100%",
-					height: "100%",
-					resizeMode: "stretch",
-				}}
+				style={[{resizeMode: "stretch"}, tw`select-none w-full h-full bg-black`]}
 			/>
 			<MagnifyingGlass
 				bgx={finger?.bgx! || 0}

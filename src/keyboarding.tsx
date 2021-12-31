@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import tw from 'twrnc';
 import {
 	View,
 	Text,
@@ -19,7 +20,7 @@ let key_processing: ReturnType<typeof setTimeout>;
 interface QueueEvent {
 	pressRelease?: string;
 	key?: string;
-	shift?: boolean;
+	shift?: boolean; 
 	t: number;
 	info?: InfoType;
 }
@@ -149,6 +150,7 @@ export function setWebEvents() {
 	});
 	const root = document.getElementById("root")!;
 	root.setAttribute("contenteditable", "true");
+	root.style.userSelect = "text";
 	root.style.cursor = "default";
 	root.style.caretColor = "transparent";
 	window.addEventListener("paste", function (e) {
@@ -178,16 +180,7 @@ function CaretButton({
 	const setStore = useThemeUpdate();
 	return (
 		<TouchableOpacity
-			style={{
-				backgroundColor: `rgba(${mode === "command" ? 255 : 0}, ${
-					mode === "chat" ? 255 : 0
-				}, 0, 0.666)`,
-				width: 27,
-				height: 27,
-				position: "absolute",
-				bottom: -15,
-				right: 0,
-			}}
+			style={tw`w-[27px] h-[27px] absolute bottom-[-15px] right-0 bg-${mode === "chat" ? "green" : "red"}-900 bg-opacity-70`}
 			onPress={(e: GestureResponderEvent) => {
 				setToggleHide(!toggleHide);
 				toggleCounter++;
@@ -198,21 +191,8 @@ function CaretButton({
 					}));
 					toggleCounter = 0;
 				}
-			}}
-		>
-			<Text
-				style={{
-					...(toggleHide
-						? {
-								marginTop: 1,
-								fontSize: 13,
-						  }
-						: { fontWeight: "bold", marginTop: 4 }),
-					textShadowColor: "black",
-					textShadowRadius: 1,
-					textAlign: "center",
-				}}
-			>
+			}}>
+			<Text style={tw`text-center drop-shadow-2xl ${toggleHide ? "mt-2 text-sm"  : "font-bold mt-4"}`}>
 				{toggleHide === true ? "v" : "^"}
 			</Text>
 		</TouchableOpacity>
@@ -234,11 +214,7 @@ export function HeldKeysComponent() {
 	const { mode } = useTheme();
 	const [toggleHide, setToggleHide] = useState(true);
 	return (
-		<View
-			style={{
-				alignSelf: "flex-end",
-			}}
-		>
+		<View style={tw`self-end`}>
 			{(mode === "command"
 				? OS === "web"
 					? Object.keys(keysHeld).filter(
@@ -248,21 +224,9 @@ export function HeldKeysComponent() {
 				: ["HistoryUp1234", "HistoryDown1234"]
 			).map((key, i) => (
 				<TouchableOpacity
-					style={{
-						backgroundColor: `rgba(${
-							mode === "command" ? 255 : 0
-						}, ${mode === "chat" ? 255 : 0}, 0, 0.666)`,
-						padding: 5,
-						alignSelf: "center",
-						marginBottom: 2,
-						borderColor: "black",
-						borderWidth: 1,
-						opacity: 0.666,
-						display: toggleHide ? "none" : "flex",
-					}}
+					style={tw`bg-opacity-70 bg-${mode === "chat" ? "green" : "red"}-900 self-center border-2 border-black mb-2 opacity-70 p-5 ${toggleHide ? "hidden" : "flex"}`}
 					activeOpacity={0}
-					key={i}
-				>
+					key={i}>
 					<Text>{key.slice(0, -4)}</Text>
 				</TouchableOpacity>
 			))}
@@ -270,8 +234,7 @@ export function HeldKeysComponent() {
 				<CaretButton
 					mode={mode}
 					setToggleHide={setToggleHide}
-					toggleHide={toggleHide}
-				/>
+					toggleHide={toggleHide} />
 			)}
 		</View>
 	);

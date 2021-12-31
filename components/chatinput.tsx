@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
+import tw from 'twrnc';
 import { TextInput, KeyboardAvoidingView } from "react-native";
 import { addQueue, HeldKeysComponent, queueKey } from "../src/keyboarding";
 import { useTheme } from "../src/theme-context";
+
 const webBlur = "red", //textinput border colors
 	webFocus = "green",
 	mobileBlur = "orange",
@@ -9,7 +11,7 @@ const webBlur = "red", //textinput border colors
 
 function findDiff(needle: string, haystack: string) {
 	let diff = "";
-	haystack.split("").forEach(function (val, i) {
+	haystack.split("").forEach((val, i) => {
 		if (val != needle.charAt(i)) diff += val;
 	});
 	return diff;
@@ -23,15 +25,13 @@ export function ChatInput() {
 		const newVal = " " + text.substr(2 + delStep);
 		setCur(newVal);
 		delStep++;
-		if (newVal === " ")
-			delLoopRef = clearInterval(delLoopRef as NodeJS.Timer);
+		if (newVal === " ") delLoopRef = clearInterval(delLoopRef as NodeJS.Timer);
 	}
 	function parseText(text: string) {
 		const isBackspace = !(cur.length < text.length);
 		let char = findDiff(cur, text).trim();
 		char = char || (isBackspace ? "Backspace" : "Space");
-		if (char.length > 1 && char !== "Backspace" && char !== "Space")
-			alert("wtf is going on here on this day"); //just in case, should never happen
+		if (char.length > 1 && char !== "Backspace" && char !== "Space") alert("wtf is going on here on this day"); //just in case, should never happen
 		queueKey({
 			code: char,
 			shiftKey: false,
@@ -53,35 +53,17 @@ export function ChatInput() {
 		} else setCur(text);
 	}
 	const [cur, setCur] = useState(mode === "command" ? " " : "");
-	const [borderColor, setBorderColor] = useState(
-		OS === "web" ? webFocus : mobileBlur //web has auto-focus on input
-	);
+	const [borderColor, setBorderColor] = useState(OS === "web" ? webFocus : mobileBlur);  //web has auto-focus on input
 	return (
 		<KeyboardAvoidingView
-			style={{
-				position: "absolute",
-				bottom: 0,
-				width: "100%",
-				alignItems: "center",
-				flex: 1,
-				justifyContent: "center",
-			}}
+			style={tw`absolute bottom-0 w-full items-center justify-center flex-auto`}
 			behavior={OS === "ios" ? "padding" : "height"}
 		>
 			<HeldKeysComponent />
 			<TextInput
-				style={{
-					borderColor,
-					borderStyle: "dashed",
-					borderLeftWidth: 1,
-					borderTopWidth: 1,
-					borderRightWidth: 1,
-					borderBottomWidth: 1,
-					width: "75%",
-					color: "white",
-					backgroundColor: `rgba(0, 0, 0, 0.${OS === "web" ? 8 : 5})`,
+				style={[{
 					...(OS === "web" ? { outlineColor: borderColor } : {}),
-				}}
+				}, tw`w-3/4 bg-black bg-opacity-${OS === "web" ? 80 : 50} text-white border-dashed border-${borderColor}-900 border-l-2 border-t-2 border-r-2 border-b-2`]}
 				onFocus={(e) => {
 					setBorderColor(
 						OS === "web" || mode === "chat" ? webFocus : mobileFocus

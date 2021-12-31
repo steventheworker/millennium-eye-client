@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import tw from 'twrnc';
 import { GestureResponderEvent, Image, PanResponder, View } from "react-native";
 import { addQueue } from "../src/keyboarding";
 import {
@@ -88,7 +89,6 @@ export function MagnifyingGlass({
 		[]
 	);
 	if (x !== 0 && y !== 0) updatePos(x, y);
-	const boxShadows = OS === "web" ? { boxShadow: "0 0 16px 3px white" } : {}; //todo: add boxShadow that works ios android
 	const panHandlers =
 		OS === "web"
 			? {
@@ -114,62 +114,22 @@ export function MagnifyingGlass({
 			? { panHandlers }
 			: useRef(PanResponder.create(panHandlers)).current;
 	return (
-		<View
-			{...panResponder.panHandlers}
-			style={{
-				zIndex: 2,
-				position: "absolute",
-				width: size,
-				height: size,
-				marginLeft: -0.5 * size,
-				marginTop: -0.5 * size,
-				overflow: "hidden",
-				borderRadius: 100,
-				top: y,
-				left: x,
-				display: hidden ? "none" : "flex",
-				backgroundColor: "red",
-				...boxShadows,
-			}}
-		>
-			<View
-				style={{
-					position: "relative",
-					width: server_screen_width,
-					height: server_screen_height,
-				}}
-			>
+		<View style={[tw`shadow-lg absolute z-20 top-[${y - 0.5*size}px] left-[${x}px] w-[${size}px] h-[${size}px] ml-[${-0.5 * size}px] bg-red-900 ${hidden ? "hidden" : "flex"} overflow-hidden rounded-full`]}
+			{...panResponder.panHandlers}>
+			<View style={tw`relative w-[${server_screen_width}px] h-[${server_screen_height}px]`}>
 				<FingerPoint />
-				<Image
-					source={{ uri }}
-					style={{
-						width: "100%",
-						height: "100%",
-						position: "absolute",
-						top: -bgy,
-						left: -bgx,
-					}}
-				/>
+				<Image style={ tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
+					source={{ uri }} />
 			</View>
 		</View>
 	);
 }
 
 //red dot (in center of magnifyingGlass) - component
+const fingerpoint = 4;
 function FingerPoint() {
-	const fingerpoint = 4;
 	return (
-		<View
-			style={{
-				width: fingerpoint,
-				height: fingerpoint,
-				marginLeft: 0.5 * size - 0.5 * fingerpoint,
-				marginTop: 0.5 * size - 0.5 * fingerpoint,
-				backgroundColor: "red",
-				position: "absolute",
-				zIndex: 1,
-			}}
-		></View>
+		<View style={tw`z-10 absolute bg-red-900 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
 	);
 }
 
