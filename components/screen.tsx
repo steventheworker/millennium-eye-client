@@ -137,7 +137,6 @@ export function Screen() {
 				setFinger={setFinger}
 				onLoadEnd={() => {
 					if (isUriLoaded) return;
-					console.log('hahahah')
 					setStore((prevStore) => ({ ...prevStore, cachedUri: uri, uri: "", isUriLoaded: true}));
 			}}
 			/>
