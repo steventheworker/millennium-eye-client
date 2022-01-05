@@ -6,6 +6,7 @@ import {
 	GestureResponderEvent,
 	PanResponder,
 	Keyboard,
+	ImageSourcePropType,
 } from "react-native";
 import {
 	themeUpdateType,
@@ -88,7 +89,7 @@ function TouchEndAndHandleControls(e: GestureResponderEvent) {
 
 //the Screen component
 export function Screen() {
-	const { uri } = useTheme();
+	const { uri, cachedUri, isUriLoaded } = useTheme();
 	const [finger, setFinger] = useState(null as FingerInfo | null);
 	const setStore = useThemeUpdate();
 	useEffect(() => {
@@ -123,8 +124,8 @@ export function Screen() {
 		<View style={tw`w-full h-full overflow-hidden`}>
 			<Image
 				{...panResponder.panHandlers}
-				source={{ uri }}
-				style={[{resizeMode: "stretch"}, tw`select-none w-full h-full bg-black`]}
+				source={cachedUri as ImageSourcePropType}
+				style={[{ resizeMode: "stretch" }, tw`select-none w-full h-full bg-black`]}
 			/>
 			<MagnifyingGlass
 				bgx={finger?.bgx! || 0}
@@ -132,8 +133,13 @@ export function Screen() {
 				x={finger?.x || 0}
 				y={finger?.y || 0}
 				hidden={!finger ? true : false}
-				uri={uri}
+				uri={isUriLoaded ? cachedUri : uri}
 				setFinger={setFinger}
+				onLoadEnd={() => {
+					if (isUriLoaded) return;
+					console.log('hahahah')
+					setStore((prevStore) => ({ ...prevStore, cachedUri: uri, uri: "", isUriLoaded: true}));
+			}}
 			/>
 			<ChatInput />
 		</View>

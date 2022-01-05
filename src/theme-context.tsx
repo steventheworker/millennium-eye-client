@@ -1,13 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { ImageSourcePropType, Platform } from "react-native";
 
 export type themeUpdateType = React.Dispatch<React.SetStateAction<xType>>;
 export type xType = {
   uri: string;
+  cachedUri: string
   mode: "command" | "chat";
+  isUriLoaded: boolean;
 };
 const defaultX: xType = {
+  isUriLoaded: true,
   uri: "../assets/blank.jpg",
+  cachedUri: "../assets/blank.jpg",
   mode: Platform.OS === "web" ? "chat" : "command",
 };
 const xContext = React.createContext(defaultX);

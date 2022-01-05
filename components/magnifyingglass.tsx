@@ -79,10 +79,12 @@ export function MagnifyingGlass({
 	bgx,
 	bgy,
 	setFinger,
+	onLoadEnd
 }: FingerInfo & {
 	uri: string;
 	hidden: boolean;
 	setFinger: setFingerType;
+	onLoadEnd: () => void;
 }) {
 	useEffect(
 		() => AddMouseSupport(setFinger, lastPos, TouchStart, TouchEnd),
@@ -119,7 +121,9 @@ export function MagnifyingGlass({
 			<View style={tw`relative w-[${server_screen_width}px] h-[${server_screen_height}px]`}>
 				<FingerPoint />
 				<Image style={ tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
-					source={{ uri }} />
+					source={{ uri }}
+					onLoadEnd={() => onLoadEnd()}
+				/>
 			</View>
 		</View>
 	);
