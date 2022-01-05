@@ -23,10 +23,16 @@ export type ResponderFN = (
 	magnifyingPos: Coordinate,
 	ButtonType?: number
 ) => void;
+function setMouse(x: number, y: number) {
+	addQueue("sm", x / zoomX, y / zoomY); //set mouse coordinate (x, y)
+}
+function moveMouse(x: number, y: number) { //move mouse coordinate (dX, dY)
+	addQueue("mm", x / zoomX, y / zoomY);
+}
 const TouchStart: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
-	addQueue("sm", e.pageX / zoomX, e.pageY / zoomY); //set mouse coordinate
+	startSyncTimer(e.pageX, e.pageY);
 	addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button
 	stop(ev);
 	startLongPress();
@@ -40,6 +46,7 @@ const TouchEnd: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	if (!withinBounds(touch, obj)) return;
 	addQueue("r" + (ButtonType === 2 ? "r" : "l"));
 	stop(ev);
+	endSyncTimer(touch.x, touch.y);
 };
 const TouchMove: ResponderFN = (e, setFinger, magnifyingPos) => {
 	endLongPress();
@@ -47,9 +54,34 @@ const TouchMove: ResponderFN = (e, setFinger, magnifyingPos) => {
 	resetMagnifyingTimer(setFinger);
 	const { pageX, pageY } = e.nativeEvent;
 	const delta = getDelta(pageX, pageY);
-	addQueue("mm", delta.x, delta.y);
+	moveMouse(delta.x, delta.y);
 	stop(e);
+	//update coordinates for mouse syncing
+	mouse.x = pageX;
+	mouse.y = pageY;
 };
+
+//mouse syncing (every 3 secs)
+const mouse = {x: 0, y: 0};
+const SYNC_DELAY = 3000;
+let syncTimer: NodeJS.Timeout | void;
+function syncTimerFn() {
+	setMouse(mouse.x, mouse.y);
+}
+function runSyncTimer() {
+	syncTimerFn();
+	syncTimer = setTimeout(runSyncTimer, SYNC_DELAY);
+}
+function startSyncTimer(x: number, y: number) {
+	if (syncTimer) return;
+	setMouse(x, y);
+	syncTimer = setTimeout(runSyncTimer, SYNC_DELAY);
+}
+function endSyncTimer(x: number, y: number) {
+	if (!syncTimer) return;
+	syncTimer = clearTimeout(syncTimer);
+	// setMouse(x, y);
+}
 
 //bind timer to mouse (eg: finger)
 let magTimeoutRef: NodeJS.Timeout | void; //magnifying glass hide timeout reference
@@ -129,13 +161,6 @@ export function MagnifyingGlass({
 	);
 }
 
-//red dot (in center of magnifyingGlass) - component
-const fingerpoint = 4;
-function FingerPoint() {
-	return (
-		<View style={tw`z-10 absolute bg-red-900 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
-	);
-}
 
 //helpers
 const lastPos = { x: 0, y: 0 };
@@ -153,5 +178,13 @@ function withinBounds(
 		obj.x <= touch.x + obj.width &&
 		obj.y + obj.height >= touch.y &&
 		obj.y <= touch.y + obj.height
+	);
+}
+
+//red dot (in center of magnifyingGlass) - component
+const fingerpoint = 4;
+function FingerPoint() {
+	return (
+		<View style={tw`z-10 absolute bg-red-900 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
 	);
 }
