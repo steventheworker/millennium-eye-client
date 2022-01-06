@@ -34,8 +34,12 @@ export function initializeSocket(setStore: themeUpdateType) {
 			//(r) efresh screen
 			if (e.data.startsWith("r|")) {
 				const utf8b64 = e.data.substr(2);
-				const uri = "data:image/png;base64," + utf8b64;
-				setStore((prevStore) => ({ ...prevStore, uri, isUriLoaded: false}));
+				const uri = "data:image/jpeg;base64," + utf8b64;
+				setStore((prevStore) => ({
+					...prevStore,
+					uri,
+					isUriLoaded: false,
+				}));
 				if (isFirstFrame) onFirstFrame(uri);
 			} else if (e.data.startsWith("dc|")) {
 				Disconnect(0, "forced disconnect / kickall");
