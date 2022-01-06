@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { ReactDOM, useEffect, useRef } from "react";
 import tw from 'twrnc';
 import { GestureResponderEvent, Image, PanResponder, View } from "react-native";
 import { addQueue } from "../src/keyboarding";
@@ -29,11 +29,17 @@ function setMouse(x: number, y: number) {
 function moveMouse(x: number, y: number) { //move mouse coordinate (dX, dY)
 	addQueue("mm", x / zoomX, y / zoomY);
 }
+
+let wasCrossHairClicked = false;
 const TouchStart: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
-	startSyncTimer(e.pageX, e.pageY);
-	addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button
+	startSyncTimer();
+	wasCrossHairClicked = (ev.target as HTMLDivElement).nodeName === "DIV"; //hover mouse  vs  click/drag
+	if (wasCrossHairClicked) {
+		setMouse(e.pageX, e.pageY);
+		addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
+	}
 	stop(ev);
 	startLongPress();
 };
@@ -44,9 +50,10 @@ const TouchEnd: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const touch = { x: e.pageX, y: e.pageY };
 	const obj = { ...magnifyingPos, width: size, height: size };
 	if (!withinBounds(touch, obj)) return;
-	addQueue("r" + (ButtonType === 2 ? "r" : "l"));
+	if (wasCrossHairClicked) addQueue("r" + (ButtonType === 2 ? "r" : "l"));
+	wasCrossHairClicked = false;
 	stop(ev);
-	endSyncTimer(touch.x, touch.y);
+	endSyncTimer();
 };
 const TouchMove: ResponderFN = (e, setFinger, magnifyingPos) => {
 	endLongPress();
@@ -72,15 +79,13 @@ function runSyncTimer() {
 	syncTimerFn();
 	syncTimer = setTimeout(runSyncTimer, SYNC_DELAY);
 }
-function startSyncTimer(x: number, y: number) {
+function startSyncTimer() {
 	if (syncTimer) return;
-	setMouse(x, y);
 	syncTimer = setTimeout(runSyncTimer, SYNC_DELAY);
 }
-function endSyncTimer(x: number, y: number) {
+function endSyncTimer() {
 	if (!syncTimer) return;
 	syncTimer = clearTimeout(syncTimer);
-	// setMouse(x, y);
 }
 
 //bind timer to mouse (eg: finger)
@@ -181,10 +186,10 @@ function withinBounds(
 	);
 }
 
-//red dot (in center of magnifyingGlass) - component
-const fingerpoint = 4;
+//CrossHair / red dot (in center of magnifyingGlass) - component
+const fingerpoint = 8; //px
 function FingerPoint() {
 	return (
-		<View style={tw`z-10 absolute bg-red-900 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
+		<View style={tw`z-10 absolute bg-red-900/80 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
 	);
 }
