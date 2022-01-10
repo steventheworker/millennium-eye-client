@@ -16,7 +16,8 @@ import {
 	endLongPress,
 } from "../src/touchlibrary";
 
-const size = 320; //magnifyingGlass diameter - same as smallest iphone width (se)
+const FINGER_SIZE = 32; //"crossHair"
+const MAG_SIZE = 320; //magnifyingGlass diameter - same as smallest iphone width (se)
 export type Coordinate = { x: number; y: number };
 export type FingerInfo = Coordinate & { bgx: number; bgy: number };
 //define events
@@ -43,8 +44,11 @@ const TouchStart: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
 	startSyncTimer();
-	console.log(ev.target);
-	wasCrossHairClicked = (ev.target as HTMLDivElement).nodeName === "DIV"; //hover mouse  vs  click/drag
+	//hover mouse  vs  click/drag
+	wasCrossHairClicked = doesCrossHairClick(
+		{ x: e.pageX, y: e.pageY },
+		magnifyingPos
+	);
 	if (wasCrossHairClicked) {
 		setMouse(e.pageX, e.pageY);
 		addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
@@ -57,7 +61,7 @@ const TouchEnd: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
 	const touch = { x: e.pageX, y: e.pageY };
-	const obj = { ...magnifyingPos, width: size, height: size };
+	const obj = { ...magnifyingPos, width: MAG_SIZE, height: MAG_SIZE };
 	if (!withinBounds(touch, obj)) return;
 	if (wasCrossHairClicked) addQueue("r" + (ButtonType === 2 ? "r" : "l"));
 	wasCrossHairClicked = false;
@@ -111,8 +115,8 @@ export function updateMagnifyingGlass(
 	x: number,
 	y: number
 ) {
-	const bgx = x / zoomX - 0.5 * size;
-	const bgy = y / zoomY - 0.5 * size;
+	const bgx = x / zoomX - 0.5 * MAG_SIZE;
+	const bgy = y / zoomY - 0.5 * MAG_SIZE;
 	setFinger(() => ({ x, y, bgx, bgy }));
 	resetMagnifyingTimer(setFinger);
 }
@@ -165,9 +169,9 @@ export function MagnifyingGlass({
 		<View
 			style={[
 				tw`shadow-lg absolute z-20 top-[${
-					y - 0.5 * size
-				}px] left-[${x}px] w-[${size}px] h-[${size}px] ml-[${
-					-0.5 * size
+					y - 0.5 * MAG_SIZE
+				}px] left-[${x}px] w-[${MAG_SIZE}px] h-[${MAG_SIZE}px] ml-[${
+					-0.5 * MAG_SIZE
 				}px] bg-red-900 ${
 					hidden ? "hidden" : "flex"
 				} overflow-hidden rounded-full`,
@@ -208,13 +212,18 @@ function withinBounds(
 }
 
 //CrossHair / red dot (in center of magnifyingGlass) - component
-const fingerpoint = 32; //px
 function FingerPoint() {
 	return (
 		<View
-			style={tw`rounded-full z-10 absolute bg-red-900/80 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${
-				0.5 * size - 0.5 * fingerpoint
-			}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}
+			style={tw`rounded-full z-10 absolute bg-red-900/80 w-[${FINGER_SIZE}px] h-[${FINGER_SIZE}px] ml-[${
+				0.5 * MAG_SIZE - 0.5 * FINGER_SIZE
+			}px] mt-[${0.5 * MAG_SIZE - 0.5 * FINGER_SIZE}px]`}
 		></View>
+	);
+}
+function doesCrossHairClick(finger: Coordinate, magnifyingGlass: Coordinate) {
+	return (
+		finger.x - magnifyingGlass.x <= FINGER_SIZE / 2 &&
+		finger.y - magnifyingGlass.y <= FINGER_SIZE / 2
 	);
 }
