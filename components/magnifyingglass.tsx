@@ -215,7 +215,7 @@ function withinBounds(
 function FingerPoint() {
 	return (
 		<View
-			style={tw`rounded-full z-10 absolute bg-red-900/80 w-[${FINGER_SIZE}px] h-[${FINGER_SIZE}px] ml-[${
+			style={tw`rounded-full z-10 absolute bg-red-900/33 w-[${FINGER_SIZE}px] h-[${FINGER_SIZE}px] ml-[${
 				0.5 * MAG_SIZE - 0.5 * FINGER_SIZE
 			}px] mt-[${0.5 * MAG_SIZE - 0.5 * FINGER_SIZE}px]`}
 		></View>
