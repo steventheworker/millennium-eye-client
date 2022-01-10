@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import tw from 'twrnc';
+import tw from "twrnc";
 import { TextInput, KeyboardAvoidingView } from "react-native";
 import { addQueue, HeldKeysComponent, queueKey } from "../src/keyboarding";
 import { useTheme } from "../src/theme-context";
@@ -25,13 +25,15 @@ export function ChatInput() {
 		const newVal = " " + text.substr(2 + delStep);
 		setCur(newVal);
 		delStep++;
-		if (newVal === " ") delLoopRef = clearInterval(delLoopRef as NodeJS.Timer);
+		if (newVal === " ")
+			delLoopRef = clearInterval(delLoopRef as NodeJS.Timer);
 	}
 	function parseText(text: string) {
 		const isBackspace = !(cur.length < text.length);
 		let char = findDiff(cur, text).trim();
 		char = char || (isBackspace ? "Backspace" : "Space");
-		if (char.length > 1 && char !== "Backspace" && char !== "Space") alert("wtf is going on here on this day"); //just in case, should never happen
+		if (char.length > 1 && char !== "Backspace" && char !== "Space")
+			alert("wtf is going on here on this day"); //just in case, should never happen
 		queueKey({
 			code: char,
 			shiftKey: false,
@@ -53,7 +55,9 @@ export function ChatInput() {
 		} else setCur(text);
 	}
 	const [cur, setCur] = useState(mode === "command" ? " " : "");
-	const [borderColor, setBorderColor] = useState(OS === "web" ? webFocus : mobileBlur);  //web has auto-focus on input
+	const [borderColor, setBorderColor] = useState(
+		OS === "web" ? webFocus : mobileBlur
+	); //web has auto-focus on input
 	return (
 		<KeyboardAvoidingView
 			style={tw`absolute bottom-0 w-full items-center justify-center flex-auto`}
@@ -61,9 +65,17 @@ export function ChatInput() {
 		>
 			<HeldKeysComponent />
 			<TextInput
-				style={[{
-					...(OS === "web" ? { outlineColor: borderColor } : {}),
-				}, tw`w-3/4 bg-black bg-opacity-${OS === "web" ? 80 : 50} text-white border-dashed border-${borderColor}-900 border-l-2 border-t-2 border-r-2 border-b-2`]}
+				style={[
+					{
+						...(OS === "web" ? { outlineColor: borderColor } : {}),
+					},
+					tw`w-3/4 bg-black bg-opacity-80 ios:bg-opacity-50 android:bg-opacity-50 text-white border-dashed border-l-2 border-t-2 border-r-2 border-b-2`,
+					tw.style(
+						borderColor === "orange" && tw`border-red-400`, //todo: why does border-orange-900 break? but not on web
+						borderColor === "red" && tw`border-red-900`,
+						borderColor === "green" && tw`border-green-900`
+					),
+				]}
 				onFocus={(e) => {
 					setBorderColor(
 						OS === "web" || mode === "chat" ? webFocus : mobileFocus

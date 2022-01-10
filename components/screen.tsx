@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import tw from 'twrnc';
+import tw from "twrnc";
 import {
 	Image,
 	View,
@@ -124,8 +124,13 @@ export function Screen() {
 		<View style={tw`w-full h-full overflow-hidden`}>
 			<Image
 				{...panResponder.panHandlers}
-				source={cachedUri as ImageSourcePropType}
-				style={[{ resizeMode: "stretch" }, tw`select-none w-full h-full bg-black`]}
+				source={OS === "web" ? cachedUri : { uri }}
+				style={[
+					{ resizeMode: "stretch" },
+					tw`${
+						OS === "web" ? "select-none" : ""
+					} w-full h-full bg-black`,
+				]}
 			/>
 			<MagnifyingGlass
 				bgx={finger?.bgx! || 0}
@@ -133,12 +138,23 @@ export function Screen() {
 				x={finger?.x || 0}
 				y={finger?.y || 0}
 				hidden={!finger ? true : false}
-				uri={isUriLoaded ? cachedUri : uri}
+				uri={
+					(isUriLoaded
+						? OS === "web"
+							? cachedUri
+							: uri
+						: uri) as ImageSourcePropType
+				}
 				setFinger={setFinger}
 				onLoadEnd={() => {
-					if (isUriLoaded) return;
-					setStore((prevStore) => ({ ...prevStore, cachedUri: uri, uri: "", isUriLoaded: true}));
-			}}
+					if (isUriLoaded || OS !== "web") return;
+					setStore((prevStore) => ({
+						...prevStore,
+						cachedUri: uri as ImageSourcePropType,
+						uri: "",
+						isUriLoaded: true,
+					}));
+				}}
 			/>
 			<ChatInput />
 		</View>

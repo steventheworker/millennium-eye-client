@@ -1,6 +1,13 @@
 import React, { ReactDOM, useEffect, useRef } from "react";
-import tw from 'twrnc';
-import { GestureResponderEvent, Image, PanResponder, View } from "react-native";
+import tw from "twrnc";
+import {
+	GestureResponderEvent,
+	Image,
+	PanResponder,
+	View,
+	ImageSourcePropType,
+} from "react-native";
+
 import { addQueue } from "../src/keyboarding";
 import {
 	AddMouseSupport,
@@ -9,7 +16,7 @@ import {
 	endLongPress,
 } from "../src/touchlibrary";
 
-const size = 200; //magnifyingGlass diameter
+const size = 320; //magnifyingGlass diameter - same as smallest iphone width (se)
 export type Coordinate = { x: number; y: number };
 export type FingerInfo = Coordinate & { bgx: number; bgy: number };
 //define events
@@ -26,7 +33,8 @@ export type ResponderFN = (
 function setMouse(x: number, y: number) {
 	addQueue("sm", x / zoomX, y / zoomY); //set mouse coordinate (x, y)
 }
-function moveMouse(x: number, y: number) { //move mouse coordinate (dX, dY)
+function moveMouse(x: number, y: number) {
+	//move mouse coordinate (dX, dY)
 	addQueue("mm", x / zoomX, y / zoomY);
 }
 
@@ -35,6 +43,7 @@ const TouchStart: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
 	startSyncTimer();
+	console.log(ev.target);
 	wasCrossHairClicked = (ev.target as HTMLDivElement).nodeName === "DIV"; //hover mouse  vs  click/drag
 	if (wasCrossHairClicked) {
 		setMouse(e.pageX, e.pageY);
@@ -69,7 +78,7 @@ const TouchMove: ResponderFN = (e, setFinger, magnifyingPos) => {
 };
 
 //mouse syncing (every 3 secs)
-const mouse = {x: 0, y: 0};
+const mouse = { x: 0, y: 0 };
 const SYNC_DELAY = 3000;
 let syncTimer: NodeJS.Timeout | void;
 function syncTimerFn() {
@@ -116,9 +125,9 @@ export function MagnifyingGlass({
 	bgx,
 	bgy,
 	setFinger,
-	onLoadEnd
+	onLoadEnd,
 }: FingerInfo & {
-	uri: string;
+	uri: ImageSourcePropType;
 	hidden: boolean;
 	setFinger: setFingerType;
 	onLoadEnd: () => void;
@@ -153,19 +162,31 @@ export function MagnifyingGlass({
 			? { panHandlers }
 			: useRef(PanResponder.create(panHandlers)).current;
 	return (
-		<View style={[tw`shadow-lg absolute z-20 top-[${y - 0.5*size}px] left-[${x}px] w-[${size}px] h-[${size}px] ml-[${-0.5 * size}px] bg-red-900 ${hidden ? "hidden" : "flex"} overflow-hidden rounded-full`]}
-			{...panResponder.panHandlers}>
-			<View style={tw`relative w-[${server_screen_width}px] h-[${server_screen_height}px]`}>
+		<View
+			style={[
+				tw`shadow-lg absolute z-20 top-[${
+					y - 0.5 * size
+				}px] left-[${x}px] w-[${size}px] h-[${size}px] ml-[${
+					-0.5 * size
+				}px] bg-red-900 ${
+					hidden ? "hidden" : "flex"
+				} overflow-hidden rounded-full`,
+			]}
+			{...panResponder.panHandlers}
+		>
+			<View
+				style={tw`relative w-[${server_screen_width}px] h-[${server_screen_height}px]`}
+			>
 				<FingerPoint />
-				<Image style={ tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
-					source={{ uri }}
+				<Image
+					style={tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
+					source={{ uri } as ImageSourcePropType}
 					onLoadEnd={() => onLoadEnd()}
 				/>
 			</View>
 		</View>
 	);
 }
-
 
 //helpers
 const lastPos = { x: 0, y: 0 };
@@ -187,9 +208,13 @@ function withinBounds(
 }
 
 //CrossHair / red dot (in center of magnifyingGlass) - component
-const fingerpoint = 8; //px
+const fingerpoint = 32; //px
 function FingerPoint() {
 	return (
-		<View style={tw`z-10 absolute bg-red-900/80 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${0.5 * size - 0.5 * fingerpoint}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}></View>
+		<View
+			style={tw`rounded-full z-10 absolute bg-red-900/80 w-[${fingerpoint}px] h-[${fingerpoint}px] ml-[${
+				0.5 * size - 0.5 * fingerpoint
+			}px] mt-[${0.5 * size - 0.5 * fingerpoint}px]`}
+		></View>
 	);
 }

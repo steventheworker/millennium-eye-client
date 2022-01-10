@@ -1,6 +1,6 @@
 import { themeUpdateType } from "./theme-context";
 import { Image } from "react-native";
-import Clipboard from "@react-native-clipboard/clipboard";
+import * as Clipboard from "expo-clipboard";
 
 const DEFAULTPORT = 8000;
 const DEVFALLBACK = "192.168.0.160";

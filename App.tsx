@@ -2,10 +2,17 @@ import React from "react";
 import { StatusBar, Platform, Dimensions } from "react-native";
 
 //globals import & define
-let isDev = true;
-process.argv.forEach((val) => (val === "--production" ? (isDev = false) : 0));
-console.log("starting " + (isDev ? "development" : "production") + " server");
-global.isDev = isDev;
+if (process.env.NODE_ENV) global.isDev = process.env.NODE_ENV === "development";
+else if (process.argv) {
+	let isDev = true;
+	process.argv.forEach((val) =>
+		val === "--production" ? (isDev = false) : 0
+	);
+	console.log(
+		"starting " + (isDev ? "development" : "production") + " server"
+	);
+	global.isDev = isDev;
+} else if (global.isDev === undefined) console.log("🚭🚭🚭 no bueno 🚭🚭🚭");
 
 global.OS = Platform.OS;
 const dimensionType = OS === "web" ? "window" : "screen";

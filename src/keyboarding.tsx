@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import tw from 'twrnc';
+import tw from "twrnc";
 import {
 	View,
 	Text,
@@ -20,7 +20,7 @@ let key_processing: ReturnType<typeof setTimeout>;
 interface QueueEvent {
 	pressRelease?: string;
 	key?: string;
-	shift?: boolean; 
+	shift?: boolean;
 	t: number;
 	info?: InfoType;
 }
@@ -180,7 +180,9 @@ function CaretButton({
 	const setStore = useThemeUpdate();
 	return (
 		<TouchableOpacity
-			style={tw`w-[27px] h-[27px] absolute bottom-[-15px] right-0 bg-${mode === "chat" ? "green" : "red"}-900 bg-opacity-70`}
+			style={tw`w-[27px] h-[27px] absolute bottom-[-20px] right-[12px] ${
+				mode === "chat" ? "bg-green-900" : "bg-red-900"
+			} bg-opacity-70 border-2`}
 			onPress={(e: GestureResponderEvent) => {
 				setToggleHide(!toggleHide);
 				toggleCounter++;
@@ -191,8 +193,13 @@ function CaretButton({
 					}));
 					toggleCounter = 0;
 				}
-			}}>
-			<Text style={tw`text-center drop-shadow-2xl ${toggleHide ? "mt-2 text-sm"  : "font-bold mt-4"}`}>
+			}}
+		>
+			<Text
+				style={tw`text-center text-white ${
+					OS === "web" ? "drop-shadow-2xl" : ""
+				} ${toggleHide ? "text-sm" : "font-bold"}`}
+			>
 				{toggleHide === true ? "v" : "^"}
 			</Text>
 		</TouchableOpacity>
@@ -224,9 +231,14 @@ export function HeldKeysComponent() {
 				: ["HistoryUp1234", "HistoryDown1234"]
 			).map((key, i) => (
 				<TouchableOpacity
-					style={tw`bg-opacity-70 bg-${mode === "chat" ? "green" : "red"}-900 self-center border-2 border-black mb-2 opacity-70 p-5 ${toggleHide ? "hidden" : "flex"}`}
+					style={tw`bg-opacity-70 ${
+						mode === "chat" ? "bg-green-900" : "bg-red-900"
+					} self-center border-2 border-black mb-2 opacity-70 p-5 ${
+						toggleHide ? "hidden" : "flex"
+					}`}
 					activeOpacity={0}
-					key={i}>
+					key={i}
+				>
 					<Text>{key.slice(0, -4)}</Text>
 				</TouchableOpacity>
 			))}
@@ -234,7 +246,8 @@ export function HeldKeysComponent() {
 				<CaretButton
 					mode={mode}
 					setToggleHide={setToggleHide}
-					toggleHide={toggleHide} />
+					toggleHide={toggleHide}
+				/>
 			)}
 		</View>
 	);
