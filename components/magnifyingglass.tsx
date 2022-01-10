@@ -16,7 +16,7 @@ import {
 	endLongPress,
 } from "../src/touchlibrary";
 
-const FINGER_SIZE = 32; //"crossHair"
+const FINGER_SIZE = 48; //"crossHair"
 const MAG_SIZE = 320; //magnifyingGlass diameter - same as smallest iphone width (se)
 export type Coordinate = { x: number; y: number };
 export type FingerInfo = Coordinate & { bgx: number; bgy: number };
