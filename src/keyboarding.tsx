@@ -17,6 +17,8 @@ export const keysHeld: keysHeldType = {};
 const queue: QueueEvent[] = [];
 let last_send_t = 0;
 let key_processing: ReturnType<typeof setTimeout>;
+let isBusyCreatingAction: boolean;
+export const setBusy = (val: boolean) => (isBusyCreatingAction = val);
 interface QueueEvent {
 	pressRelease?: string;
 	key?: string;
@@ -26,14 +28,14 @@ interface QueueEvent {
 }
 
 function processQueue() {
-	console.log(
-		"\t\t\t\t\t\t\t\t\t\t\t...\t\t\t\t\t\tprocessing\t\t\t\t\t\t\t\t...\t..."
-	);
+	// console.log(
+	// 	"\t\t\t\t\t\t\t\t\t\t\t...\t\t\t\t\t\tprocessing\t\t\t\t\t\t\t\t...\t..."
+	// );
 	if (!queue.length) return;
 	const last = queue[queue.length - 1];
 	const deltaT = last.t - last_send_t;
 	const curT = new Date().getTime();
-	let delay_processing = false;
+	let delay_processing = isBusyCreatingAction;
 	function do_process() {
 		let dataString = "";
 		for (let i in queue) {
@@ -59,10 +61,12 @@ function processQueue() {
 		last_send_t = curT;
 		queue.splice(0, queue.length);
 	}
-	if (last.pressRelease === "u" || !last.pressRelease /* mouse event */) {
-		if (deltaT < send_t_millisecs || curT - send_t_millisecs < 333)
-			delay_processing = true;
-		else do_process();
+	if (!delay_processing) {
+		if (last.pressRelease === "u" || !last.pressRelease /* mouse event */) {
+			if (deltaT < send_t_millisecs || curT - send_t_millisecs < 333)
+				delay_processing = true;
+			else do_process();
+		}
 	}
 	if (last.pressRelease === "d" || delay_processing) {
 		if (curT - last.t > send_t_millisecs) return do_process();
@@ -73,8 +77,10 @@ function processQueue() {
 
 type UpDown = "u" | "d";
 type keyInfoType = [UpDown, string, boolean];
-type mouseInfoType = [string, number, number];
-type InfoType = [string] | keyInfoType | mouseInfoType;
+type mouseInfoType =
+	| [string, number, number]
+	| [string, number, number, true | void];
+type InfoType = [string] | keyInfoType | mouseInfoType | [string, true];
 export function addQueue(...info: InfoType) {
 	const [pressRelease, key, shift] = info;
 	const t = new Date().getTime();
@@ -86,6 +92,12 @@ export function addQueue(...info: InfoType) {
 			shift,
 			t,
 		});
+	} else if (
+		(typeof pressRelease === "string" && key === true) ||
+		arguments[3] === true
+	) {
+		//add to beginning of queue (all other events mouse move,click,scroll)
+		queue.splice(0, 0, { info, t: (queue[0] && queue[0].t) || t });
 	} else queue.push({ info, t }); //all other events mouse move,click,scroll
 	processQueue();
 }
@@ -115,10 +127,7 @@ export function queueKey(e: KeyboardEvent) {
 		delete keysHeld[key];
 	} else if (!keysHeld[key]) add2queue();
 }
-export function deleteLast() {
-	//deletes this line from magnifyingglass.tsx (touchstart)  (since queue isn't available globally/through context):                                addQueue("p" + (ButtonType === 2 ? "r" : "l"));
-	queue.pop();
-}
+export const getQ = () => queue;
 
 //listen to desktop (web) Events (keydown, keyup, beforeunload, ...) & stop() e's (prevent from accidentally closing the page, etc.)
 export function setWebEvents() {

@@ -4,8 +4,7 @@ import {
 	ResponderFN,
 	setFingerType,
 } from "../components/magnifyingglass";
-import { addQueue, send_t_millisecs as queT, deleteLast } from "./keyboarding";
-const gestureBufferTolerance = 5;
+import { addQueue, getQ, send_t_millisecs, setBusy } from "./keyboarding";
 
 //helpers (features: cache lastTouch, firstTouch)
 const firstTouch = { x: 0, y: 0 };
@@ -51,23 +50,63 @@ export function TouchMove(e: GestureResponderEvent) {
 
 //longPress / right click (mobile)
 let longPressTimeoutRef: NodeJS.Timeout | void;
-export function startLongPress() {
-	if (OS === "web") return;
+export function startLongPress(
+	wasCrossHairClicked: boolean,
+	ButtonType: number
+) {
+	isLongPressSettled = false; //reset var
+	setBusy(true);
+	if (OS === "web") {
+		if (wasCrossHairClicked) addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
+		return;
+	}
 	const minTime = 500; //ms
 	function longPress() {
-		deleteLast();
-		addQueue("pr");
-		addQueue("rr");
+		openContextMenu();
 		console.log("long pressed!!!");
+		longPressTimeoutRef = undefined;
 	}
 	longPressTimeoutRef = setTimeout(
 		longPress,
-		queT > minTime ? minTime : queT
+		send_t_millisecs > minTime ? minTime : send_t_millisecs
 	);
 }
-export function endLongPress() {
-	if (OS === "web") return;
+
+let isLongPressSettled = false;
+export function endLongPress(wasCrossHairClicked: boolean, ButtonType: number) {
+	if (OS === "web") {
+		if (wasCrossHairClicked) {
+			const q = getQ();
+			if (
+				((q[q.length - 1] || {}).info || [])[0] === "pr" &&
+				ButtonType == 2
+			) {
+				q.pop(); //undo "pr"
+				openContextMenu();
+			} else addQueue("r" + (ButtonType === 2 ? "r" : "l"));
+		}
+		setBusy(false);
+		return;
+	}
+	if (wasCrossHairClicked) {
+		//NaN === undefined (from mousemove/touchmove)
+		if (isNaN(ButtonType)) {
+			//mouseover event
+			if (!isLongPressSettled) {
+				addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
+				isLongPressSettled = true;
+			}
+		} else {
+			//touchend
+			if (longPressTimeoutRef) {
+				addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
+				addQueue("r" + (ButtonType === 2 ? "r" : "l"));
+			} else if (isLongPressSettled)
+				addQueue("r" + (ButtonType === 2 ? "r" : "l"));
+		}
+	}
 	longPressTimeoutRef = clearTimeout(longPressTimeoutRef as NodeJS.Timeout);
+	setBusy(false);
 }
 
 //AddMouseSupport(web)    =    mousewheel scroll  +  right click & drag
@@ -110,4 +149,10 @@ export function AddMouseSupport(
 	}
 	document.body.addEventListener("mousewheel", MouseWheel);
 	document.body.addEventListener("DOMMouseScroll", MouseWheel);
+}
+function openContextMenu() {
+	addQueue("pl");
+	addQueue("rl");
+	addQueue("pr");
+	addQueue("rr");
 }

@@ -1,4 +1,4 @@
-import React, { ReactDOM, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import tw from "twrnc";
 import {
 	GestureResponderEvent,
@@ -31,12 +31,12 @@ export type ResponderFN = (
 	magnifyingPos: Coordinate,
 	ButtonType?: number
 ) => void;
-function setMouse(x: number, y: number) {
-	addQueue("sm", x / zoomX, y / zoomY); //set mouse coordinate (x, y)
+function setMouse(x: number, y: number, beginning: void | true) {
+	addQueue("sm", x / zoomX, y / zoomY, beginning); //set mouse coordinate (x, y)
 }
-function moveMouse(x: number, y: number) {
+function moveMouse(x: number, y: number, beginning: void | true) {
 	//move mouse coordinate (dX, dY)
-	addQueue("mm", x / zoomX, y / zoomY);
+	addQueue("mm", x / zoomX, y / zoomY, beginning);
 }
 
 let wasCrossHairClicked = false;
@@ -49,27 +49,23 @@ const TouchStart: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
 		{ x: e.pageX, y: e.pageY },
 		magnifyingPos
 	);
-	if (wasCrossHairClicked) {
-		setMouse(e.pageX, e.pageY);
-		addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
-	}
+	if (wasCrossHairClicked) setMouse(e.pageX, e.pageY);
 	stop(ev);
-	startLongPress();
+	startLongPress(wasCrossHairClicked, ButtonType as number);
 };
 const TouchEnd: ResponderFN = (ev, setFinger, magnifyingPos, ButtonType) => {
-	endLongPress();
+	endLongPress(wasCrossHairClicked, ButtonType || 0);
 	const e = (ev as GestureResponderEvent).nativeEvent || ev;
 	resetMagnifyingTimer(setFinger);
 	const touch = { x: e.pageX, y: e.pageY };
 	const obj = { ...magnifyingPos, width: MAG_SIZE, height: MAG_SIZE };
 	if (!withinBounds(touch, obj)) return;
-	if (wasCrossHairClicked) addQueue("r" + (ButtonType === 2 ? "r" : "l"));
 	wasCrossHairClicked = false;
 	stop(ev);
 	endSyncTimer();
 };
 const TouchMove: ResponderFN = (e, setFinger, magnifyingPos) => {
-	endLongPress();
+	if (OS !== "web") endLongPress(wasCrossHairClicked, NaN);
 	e = e as GestureResponderEvent;
 	resetMagnifyingTimer(setFinger);
 	const { pageX, pageY } = e.nativeEvent;

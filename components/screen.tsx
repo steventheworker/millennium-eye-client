@@ -8,11 +8,7 @@ import {
 	Keyboard,
 	ImageSourcePropType,
 } from "react-native";
-import {
-	themeUpdateType,
-	useTheme,
-	useThemeUpdate,
-} from "../src/theme-context";
+import { useTheme, useThemeUpdate } from "../src/theme-context";
 import { initializeSocket } from "../src/sockets";
 import { addQueue, setWebEvents } from "../src/keyboarding";
 import { TouchMove, TouchEnd, TouchStart } from "../src/touchlibrary";
