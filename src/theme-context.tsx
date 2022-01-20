@@ -34,3 +34,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 		</xContext.Provider>
 	);
 }
+
+//actual themeing  /  Definitions
+export const webBlur = "red", //textinput border colors
+	webFocus = "green",
+	mobileBlur = "orange",
+	mobileFocus = "red";

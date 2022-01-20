@@ -7,7 +7,12 @@ import {
 	GestureResponderEvent,
 } from "react-native";
 import { KeyCodes } from "../src/keymapping";
-import { useTheme, useThemeUpdate } from "../src/theme-context";
+import {
+	useTheme,
+	useThemeUpdate,
+	mobileFocus,
+	webFocus,
+} from "../src/theme-context";
 
 //hardcoded "config"
 export const send_t_millisecs = 175;
@@ -181,28 +186,32 @@ function CaretButton({
 	toggleHide,
 	setToggleHide,
 	mode,
+	setBorderColor,
 }: {
 	toggleHide: boolean;
 	setToggleHide: React.Dispatch<React.SetStateAction<boolean>>;
 	mode: "command" | "chat";
+	setBorderColor: React.Dispatch<React.SetStateAction<string>>;
 }) {
 	const setStore = useThemeUpdate();
+	const onClick = (e: GestureResponderEvent) => {
+		setToggleHide(!toggleHide);
+		toggleCounter++;
+		if (toggleCounter % 3 === 0) {
+			setStore((prevStore) => ({
+				...prevStore,
+				mode: mode === "chat" ? "command" : "chat",
+			}));
+			toggleCounter = 0;
+			setBorderColor(mode === "chat" ? mobileFocus : webFocus);
+		}
+	};
 	return (
 		<TouchableOpacity
 			style={tw`w-[27px] h-[27px] absolute bottom-[-20px] right-[12px] ${
 				mode === "chat" ? "bg-green-900" : "bg-red-900"
 			} bg-opacity-70 border-2`}
-			onPress={(e: GestureResponderEvent) => {
-				setToggleHide(!toggleHide);
-				toggleCounter++;
-				if (toggleCounter % 3 === 0) {
-					setStore((prevStore) => ({
-						...prevStore,
-						mode: mode === "chat" ? "command" : "chat",
-					}));
-					toggleCounter = 0;
-				}
-			}}
+			onPress={onClick}
 		>
 			<Text
 				style={tw`text-center text-white ${
@@ -226,7 +235,11 @@ const importantKeys = [
 	"ControlLeft",
 	"ControlRight",
 ];
-export function HeldKeysComponent() {
+export function HeldKeysComponent({
+	setBorderColor,
+}: {
+	setBorderColor: React.Dispatch<React.SetStateAction<string>>;
+}) {
 	const { mode } = useTheme();
 	const [toggleHide, setToggleHide] = useState(true);
 	return (
@@ -256,6 +269,7 @@ export function HeldKeysComponent() {
 					mode={mode}
 					setToggleHide={setToggleHide}
 					toggleHide={toggleHide}
+					setBorderColor={setBorderColor}
 				/>
 			)}
 		</View>

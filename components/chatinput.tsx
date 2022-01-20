@@ -1,13 +1,16 @@
 import React, { useRef, useState } from "react";
 import tw from "twrnc";
 import { TextInput, KeyboardAvoidingView } from "react-native";
-import { addQueue, HeldKeysComponent, queueKey } from "../src/keyboarding";
-import { useTheme } from "../src/theme-context";
-
-const webBlur = "red", //textinput border colors
-	webFocus = "green",
-	mobileBlur = "orange",
-	mobileFocus = "red";
+import { HeldKeysComponent, queueKey } from "../src/keyboarding";
+import {
+	useTheme,
+	useThemeUpdate,
+	xType,
+	webBlur,
+	webFocus,
+	mobileBlur,
+	mobileFocus,
+} from "../src/theme-context";
 
 function findDiff(needle: string, haystack: string) {
 	let diff = "";
@@ -19,8 +22,11 @@ function findDiff(needle: string, haystack: string) {
 
 let delLoopRef: NodeJS.Timer | void;
 let delStep = 0;
+let toggleCounter = 0;
+let toggleCounterRef: NodeJS.Timer | void;
 export function ChatInput() {
 	const { mode } = useTheme();
+	const setStore = useThemeUpdate();
 	function emptyInput(text: string) {
 		const newVal = " " + text.substr(2 + delStep);
 		setCur(newVal);
@@ -63,8 +69,30 @@ export function ChatInput() {
 			style={tw`absolute bottom-0 w-full items-center justify-center flex-auto`}
 			behavior={OS === "ios" ? "padding" : "height"}
 		>
-			<HeldKeysComponent />
+			<HeldKeysComponent setBorderColor={setBorderColor} />
 			<TextInput
+				onPressIn={(e) => {
+					//runs on mobile (only)
+					toggleCounter++;
+					if (toggleCounter % 3 === 0) {
+						setStore((prevStore: xType) => ({
+							...prevStore,
+							mode: mode === "chat" ? "command" : "chat",
+						}));
+						toggleCounter = 0;
+						setBorderColor(
+							mode === "chat" ? mobileFocus : webFocus
+						);
+						if (toggleCounterRef)
+							toggleCounterRef = clearTimeout(toggleCounterRef);
+					} else {
+						if (toggleCounterRef) return;
+						toggleCounterRef = setTimeout(() => {
+							toggleCounter = 0;
+							toggleCounterRef = undefined;
+						}, 1200);
+					}
+				}}
 				style={[
 					{
 						...(OS === "web" ? { outlineColor: borderColor } : {}),
