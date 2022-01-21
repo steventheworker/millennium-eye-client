@@ -12,7 +12,13 @@ import {
 	useThemeUpdate,
 	mobileFocus,
 	webFocus,
+	xType,
 } from "../src/theme-context";
+import {
+	getFromHistory,
+	setNextHistory,
+	setPrevHistory,
+} from "../components/chatinput";
 
 //hardcoded "config"
 export const send_t_millisecs = 175;
@@ -235,35 +241,53 @@ const importantKeys = [
 	"ControlLeft",
 	"ControlRight",
 ];
+//HeldKeys,   (mobile - "chat" mode) - HistoryUp & HistoryDown buttons,    (mobile - "command" mode) - importantKey(s) buttons (Ctrl, Option, WindowsKey, etc.)
 export function HeldKeysComponent({
 	setBorderColor,
 }: {
 	setBorderColor: React.Dispatch<React.SetStateAction<string>>;
 }) {
 	const { mode } = useTheme();
+	const setStore = useThemeUpdate();
 	const [toggleHide, setToggleHide] = useState(true);
 	return (
 		<View style={tw`self-end`}>
-			{(mode === "command"
-				? OS === "web"
-					? Object.keys(keysHeld).filter(
-							(key) => importantKeys.indexOf(key) !== -1
-					  )
-					: importantKeys.filter((key) => key.endsWith("Left"))
-				: ["HistoryUp1234", "HistoryDown1234"]
-			).map((key, i) => (
-				<TouchableOpacity
-					style={tw`bg-opacity-70 ${
-						mode === "chat" ? "bg-green-900" : "bg-red-900"
-					} self-center border-2 border-black mb-2 opacity-70 p-5 ${
-						toggleHide ? "hidden" : "flex"
-					}`}
-					activeOpacity={0}
-					key={i}
-				>
-					<Text>{key.slice(0, -4)}</Text>
-				</TouchableOpacity>
-			))}
+			{
+				//Array of [Button title  +   4 garbage characters (0000/left) eg: (CtrlLeft,AltLeft,History0000)  ].map()
+				(mode === "command"
+					? OS === "web"
+						? Object.keys(keysHeld).filter(
+								(key) => importantKeys.indexOf(key) !== -1
+						  )
+						: importantKeys.filter((key) => key.endsWith("Left"))
+					: ["HistoryUp0000", "HistoryDown0000"]
+				).map((key, i) => (
+					<TouchableOpacity
+						style={tw`bg-opacity-70 ${
+							mode === "chat" ? "bg-green-900" : "bg-red-900"
+						} self-center border-2 border-black mb-2 opacity-70 p-5 ${
+							toggleHide ? "hidden" : "flex"
+						}`}
+						activeOpacity={0}
+						key={i}
+						onPress={(e) => {
+							if (
+								key === "HistoryUp0000" ||
+								key === "HistoryDown0000"
+							) {
+								if (key === "HistoryUp0000") setPrevHistory();
+								if (key === "HistoryDown0000") setNextHistory();
+								setStore((prev) => ({
+									...prev,
+									chatVal: getFromHistory(),
+								}));
+							}
+						}}
+					>
+						<Text>{key.slice(0, -4)}</Text>
+					</TouchableOpacity>
+				))
+			}
 			{OS === "web" ? null : (
 				<CaretButton
 					mode={mode}

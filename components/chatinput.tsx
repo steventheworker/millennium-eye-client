@@ -20,23 +20,53 @@ function findDiff(needle: string, haystack: string) {
 	return diff;
 }
 
+/*
+	Chat History
+*/
+const ChatHistory: string[] = [];
+let cwm = ""; //current working message (index === -1)
+let inputIndex = -1; //-1 = currently typed message, 0 = prev message sent, n = first message sent
+export function getFromHistory(i: number | void) {
+	if (i === -1 || (i === undefined && inputIndex === -1)) return cwm;
+	return ChatHistory[i === undefined ? inputIndex : i];
+}
+export function setPrevHistory() {
+	if (inputIndex + 1 > ChatHistory.length - 1) return;
+	inputIndex++;
+}
+export function setNextHistory() {
+	if (inputIndex - 1 < -1) return;
+	inputIndex--;
+}
+function sendMsg(msg: string) {
+	ws.send(msg);
+	ChatHistory.splice(0, 0, msg);
+	cwm = "";
+}
+
+/*
+	ChatInput
+*/
 let delLoopRef: NodeJS.Timer | void;
 let delStep = 0;
 let toggleCounter = 0;
 let toggleCounterRef: NodeJS.Timer | void;
 export function ChatInput() {
-	const { mode } = useTheme();
+	const { mode, chatVal } = useTheme();
 	const setStore = useThemeUpdate();
 	function emptyInput(text: string) {
 		const newVal = " " + text.substr(2 + delStep);
-		setCur(newVal);
+		setStore((prevStore) => ({
+			...prevStore,
+			chatVal: newVal,
+		}));
 		delStep++;
 		if (newVal === " ")
 			delLoopRef = clearInterval(delLoopRef as NodeJS.Timer);
 	}
 	function parseText(text: string) {
-		const isBackspace = !(cur.length < text.length);
-		let char = findDiff(cur, text).trim();
+		const isBackspace = !(chatVal.length < text.length);
+		let char = findDiff(chatVal, text).trim();
 		char = char || (isBackspace ? "Backspace" : "Space");
 		if (char.length > 1 && char !== "Backspace" && char !== "Space")
 			alert("wtf is going on here on this day"); //just in case, should never happen
@@ -50,7 +80,11 @@ export function ChatInput() {
 			shiftKey: false,
 			type: "keyup",
 		} as KeyboardEvent);
-		if (!isBackspace) setCur(text);
+		if (!isBackspace)
+			setStore((prevStore) => ({
+				...prevStore,
+				chatVal: text,
+			}));
 	}
 	function handleChangeText(text: string) {
 		if (mode === "command") {
@@ -58,9 +92,12 @@ export function ChatInput() {
 			delStep = 0;
 			if (delLoopRef) delLoopRef = clearInterval(delLoopRef);
 			delLoopRef = setInterval(() => emptyInput(text), 200);
-		} else setCur(text);
+		} else
+			setStore((prevStore) => ({
+				...prevStore,
+				chatVal: text,
+			}));
 	}
-	const [cur, setCur] = useState(mode === "command" ? " " : "");
 	const [borderColor, setBorderColor] = useState(
 		OS === "web" ? webFocus : mobileBlur
 	); //web has auto-focus on input
@@ -116,6 +153,18 @@ export function ChatInput() {
 				blurOnSubmit={false}
 				placeholder={"Enter a message [Press Enter]"}
 				onChangeText={(text) => handleChangeText(text)}
+				onKeyPress={(ev) => {
+					const e: KeyboardEvent = ev as unknown as KeyboardEvent;
+					if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+						if (inputIndex === -1) cwm = chatVal;
+						if (e.key === "ArrowUp") setPrevHistory();
+						if (e.key === "ArrowDown") setNextHistory();
+						setStore((prevStore) => ({
+							...prevStore,
+							chatVal: getFromHistory(),
+						}));
+					}
+				}}
 				onSubmitEditing={(e) => {
 					if (mode === "command") {
 						//todo: queue Enter key
@@ -124,10 +173,13 @@ export function ChatInput() {
 					}
 					const msg = e.nativeEvent.text.trim();
 					if (!msg) return;
-					ws.send(msg);
-					setCur("");
+					sendMsg(msg);
+					setStore((prevStore) => ({
+						...prevStore,
+						chatVal: "",
+					}));
 				}}
-				value={cur}
+				value={chatVal}
 				selectTextOnFocus={true}
 				autoCorrect={false}
 			/>
