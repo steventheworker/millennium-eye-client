@@ -60,12 +60,12 @@ export function initializeSocket(setStore: themeUpdateType) {
 	ws.send("init"); //send initial message, w/ no specific purpose //todo: find specific purpose
 }
 function Disconnect(code: number, reason: string) {
-	if (OS === "web")
+	if (OS === "web" || (reason && reason.startsWith("forced")))
 		setTimeout(() => document.write("d/c screen - socket died"), 1000);
 	console.log("close\ncode,reason: ", code, `"${reason}"`);
 }
 export class Socket {
-	socket: WebSocket;
+	socket: WebSocket | undefined;
 	queue: string[];
 	processing: boolean;
 	connected: boolean;
@@ -80,40 +80,68 @@ export class Socket {
 		onclose?: (e: Event) => void;
 		onmessage?: (e: Event) => void;
 	}) {
+		const self = this;
 		let socketUrl = OS === "web" ? window.location.hostname : DEVFALLBACK; //todo: stop hardcode t430 as last resort
 		if (isDev) socketUrl = DEVFALLBACK;
-		const ws = new WebSocket(
+		this.socket = new WebSocket(
 			`ws://${socketUrl}:${DEFAULTPORT}/sockets/websocket`
 		);
-		ws.onopen = () => {
+		this.socket.onopen = () => {
 			this.connected = true;
 			console.log("got connected! logging on!");
 			if (onopen) onopen();
 		};
-		ws.onerror = (e) => {
+		this.socket.onerror = (e) => {
 			console.log(e.message);
 			if (onerror) onerror(e);
 		};
-		ws.onclose = (e) => {
+		this.socket.onclose = (e) => {
 			Disconnect(e.code, e.reason);
 			if (onclose) onclose(e);
+			if (OS !== "web") {
+				(function AutoReconnect() {
+					console.log("reconnecting in... 250ms");
+					const cachedHandlers = [
+						self.socket!.onopen,
+						self.socket!.onerror,
+						self.socket!.onclose,
+						self.socket!.onmessage,
+					];
+					delete self.socket;
+					setTimeout(() => {
+						self.socket = new Socket({}).socket;
+						self.socket!.onopen = cachedHandlers[0] as
+							| ((this: WebSocket, ev: Event) => void)
+							| null;
+						self.socket!.onerror = cachedHandlers[1] as
+							| ((this: WebSocket, ev: Event) => void)
+							| null;
+						self.socket!.onclose = cachedHandlers[2] as
+							| ((this: WebSocket, ev: Event) => void)
+							| null;
+						self.socket!.onmessage = cachedHandlers[3] as
+							| ((this: WebSocket, ev: Event) => void)
+							| null;
+						console.log("reconnected successfully!");
+					}, 250);
+				})();
+			}
 		};
-		ws.onmessage = (e) => {
+		this.socket.onmessage = (e) => {
 			if (!e.data.startsWith("r|")) console.log("<< " + e.data); //todo: remove debug line
 			if (onmessage) onmessage(e);
 		};
-		this.socket = ws;
 		this.queue = [];
 		this.processing = false;
 		this.connected = false;
 	}
 	send(data: string) {
-		if (this.socket.readyState === WebSocket.CONNECTING) {
+		if (this.socket!.readyState === WebSocket.CONNECTING) {
 			return this.sendQueue(data);
 		}
 		data = "|" + data;
 		console.log(">> " + data);
-		this.socket.send(data);
+		this.socket!.send(data);
 	}
 	sendQueue(data: string) {
 		this.queue.push(data);
@@ -124,7 +152,7 @@ export class Socket {
 		this.processing = true;
 		setTimeout(() => {
 			this.processing = false;
-			if (this.socket.readyState === WebSocket.CONNECTING) {
+			if (this.socket!.readyState === WebSocket.CONNECTING) {
 				return this.processQueue();
 			}
 			this.send(this.queue.join("\\n"));
