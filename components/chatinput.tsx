@@ -11,6 +11,13 @@ import {
 	mobileBlur,
 	mobileFocus,
 } from "../src/theme-context";
+import {
+	getFromHistory,
+	setNextHistory,
+	setPrevHistory,
+	logMessage,
+	updateCurrentWorkingMessage,
+} from "../src/keyboarding";
 
 function findDiff(needle: string, haystack: string) {
 	let diff = "";
@@ -18,30 +25,6 @@ function findDiff(needle: string, haystack: string) {
 		if (val != needle.charAt(i)) diff += val;
 	});
 	return diff;
-}
-
-/*
-	Chat History
-*/
-const ChatHistory: string[] = [];
-let cwm = ""; //current working message (index === -1)
-let inputIndex = -1; //-1 = currently typed message, 0 = prev message sent, n = first message sent
-export function getFromHistory(i: number | void) {
-	if (i === -1 || (i === undefined && inputIndex === -1)) return cwm;
-	return ChatHistory[i === undefined ? inputIndex : i];
-}
-export function setPrevHistory() {
-	if (inputIndex + 1 > ChatHistory.length - 1) return;
-	inputIndex++;
-}
-export function setNextHistory() {
-	if (inputIndex - 1 < -1) return;
-	inputIndex--;
-}
-function sendMsg(msg: string) {
-	ws.send(msg);
-	ChatHistory.splice(0, 0, msg);
-	cwm = "";
 }
 
 /*
@@ -156,7 +139,7 @@ export function ChatInput() {
 				onKeyPress={(ev) => {
 					const e: KeyboardEvent = ev as unknown as KeyboardEvent;
 					if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-						if (inputIndex === -1) cwm = chatVal;
+						updateCurrentWorkingMessage(chatVal);
 						if (e.key === "ArrowUp") setPrevHistory();
 						if (e.key === "ArrowDown") setNextHistory();
 						setStore((prevStore) => ({
@@ -173,7 +156,8 @@ export function ChatInput() {
 					}
 					const msg = e.nativeEvent.text.trim();
 					if (!msg) return;
-					sendMsg(msg);
+					ws.send(msg);
+					logMessage(msg);
 					setStore((prevStore) => ({
 						...prevStore,
 						chatVal: "",

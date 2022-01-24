@@ -14,11 +14,6 @@ import {
 	webFocus,
 	xType,
 } from "../src/theme-context";
-import {
-	getFromHistory,
-	setNextHistory,
-	setPrevHistory,
-} from "../components/chatinput";
 
 //hardcoded "config"
 export const send_t_millisecs = 175;
@@ -230,7 +225,35 @@ function CaretButton({
 	);
 }
 
-//Caret Menu
+/*
+	Chat History
+*/
+const ChatHistory: string[] = [];
+let cwm = ""; //current working message (index === -1)
+let inputIndex = -1; //-1 = currently typed message, 0 = prev message sent, n = first message sent
+export function getFromHistory(i: number | void) {
+	if (i === -1 || (i === undefined && inputIndex === -1)) return cwm;
+	return ChatHistory[i === undefined ? inputIndex : i];
+}
+export function setPrevHistory() {
+	if (inputIndex + 1 > ChatHistory.length - 1) return;
+	inputIndex++;
+}
+export function setNextHistory() {
+	if (inputIndex - 1 < -1) return;
+	inputIndex--;
+}
+export function logMessage(msg: string) {
+	ChatHistory.splice(0, 0, msg);
+	cwm = "";
+}
+export function updateCurrentWorkingMessage(msg: string) {
+	if (inputIndex === -1) cwm = msg;
+}
+
+/*
+	Caret  ^   Button Menu
+*/
 const importantKeys = [
 	"MetaLeft",
 	"MetaRight",
