@@ -164,25 +164,30 @@ export function MagnifyingGlass({
 	return (
 		<View
 			style={[
-				tw`shadow-lg absolute z-20 top-[${
+				tw`bg-[tranparent] shadow-xl shadow-opacity-35 absolute z-20 top-[${
 					y - 0.5 * MAG_SIZE
 				}px] left-[${x}px] w-[${MAG_SIZE}px] h-[${MAG_SIZE}px] ml-[${
 					-0.5 * MAG_SIZE
-				}px] bg-red-900 ${
-					hidden ? "hidden" : "flex"
-				} overflow-hidden rounded-full`,
+				}px] ${hidden ? "hidden" : "flex"} ${
+					OS === "web" ? "rounded-full" : ""
+				}`,
+				,
 			]}
 			{...panResponder.panHandlers}
 		>
 			<View
-				style={tw`relative w-[${server_screen_width}px] h-[${server_screen_height}px]`}
+				style={tw`rounded-full relative overflow-hidden w-full h-full`}
 			>
-				<FingerPoint />
-				<Image
-					style={tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
-					source={{ uri } as ImageSourcePropType}
-					onLoadEnd={() => onLoadEnd()}
-				/>
+				<View
+					style={tw`w-[${server_screen_width}px] h-[${server_screen_height}px]`}
+				>
+					<FingerPoint />
+					<Image
+						style={tw`w-full h-full absolute top-[${-bgy}px] left-[${-bgx}px]`}
+						source={{ uri } as ImageSourcePropType}
+						onLoadEnd={() => onLoadEnd()}
+					/>
+				</View>
 			</View>
 		</View>
 	);
