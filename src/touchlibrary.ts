@@ -55,11 +55,11 @@ export function startLongPress(
 	ButtonType: number
 ) {
 	isLongPressSettled = false; //reset var
-	setBusy(true);
 	if (OS === "web") {
 		if (wasCrossHairClicked) addQueue("p" + (ButtonType === 2 ? "r" : "l")); //press mouse button (clicking / dragging)
 		return;
 	}
+	setBusy(true);
 	const minTime = 500; //ms
 	function longPress() {
 		openContextMenu();
