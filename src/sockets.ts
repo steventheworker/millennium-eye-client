@@ -41,7 +41,28 @@ export function initializeSocket(setStore: themeUpdateType) {
 					isUriLoaded: false,
 				}));
 				if (isFirstFrame) onFirstFrame(uri);
-			} else if (e.data.startsWith("dc|")) {
+				return;
+			}
+
+			//receive chatLog (since only r| is allowed to be obscenely long (& /copy (for now)))
+			setStore((prevStore) => ({
+				...prevStore,
+				chatLog: [e.data, ...prevStore.chatLog],
+			}));
+			setTimeout(() => {
+				//pop a chatLog (5.75s later)
+				setStore((prevStore) => {
+					const chatLog = prevStore.chatLog;
+					chatLog.pop();
+					return {
+						...prevStore,
+						chatLog,
+					};
+				});
+			}, 5750);
+
+			//handle other events
+			if (e.data.startsWith("dc|")) {
 				Disconnect(0, "forced disconnect / kickall");
 			} else if (e.data.startsWith("cp|")) {
 				const clipboardContent = e.data.substr(3);

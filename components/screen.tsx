@@ -3,6 +3,7 @@ import tw from "twrnc";
 import {
 	Image,
 	View,
+	Text,
 	GestureResponderEvent,
 	PanResponder,
 	Keyboard,
@@ -85,7 +86,7 @@ function TouchEndAndHandleControls(e: GestureResponderEvent) {
 
 //the Screen component
 export function Screen() {
-	const { uri, cachedUri, isUriLoaded } = useTheme();
+	const { uri, cachedUri, isUriLoaded, chatLog } = useTheme();
 	const [finger, setFinger] = useState(null as FingerInfo | null);
 	const setStore = useThemeUpdate();
 	useEffect(() => {
@@ -153,6 +154,19 @@ export function Screen() {
 				}}
 			/>
 			<ChatInput />
+			{
+				/* chatLog */
+				chatLog.map((msg, i) => {
+					return (
+						<View
+							key={i}
+							style={tw`absolute right-0 bottom-${i * 50}px z-10`}
+						>
+							<Text style={{ color: "white" }}>{msg}</Text>
+						</View>
+					);
+				})
+			}
 		</View>
 	);
 }

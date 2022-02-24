@@ -8,6 +8,7 @@ export type xType = {
 	mode: "command" | "chat";
 	chatVal: string;
 	isUriLoaded: boolean;
+	chatLog: string[];
 };
 const mode = Platform.OS === "web" ? "chat" : "command";
 const defaultX: xType = {
@@ -16,6 +17,7 @@ const defaultX: xType = {
 	cachedUri: "../assets/blank.jpg" as ImageSourcePropType,
 	mode,
 	chatVal: mode === "command" ? " " : "",
+	chatLog: [],
 };
 const xContext = React.createContext(defaultX);
 let xUpdateContext = React.createContext((() => {}) as themeUpdateType);
