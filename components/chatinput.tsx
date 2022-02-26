@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import tw from "twrnc";
-import { TextInput, KeyboardAvoidingView } from "react-native";
+import { TextInput, KeyboardAvoidingView, View, Text } from "react-native";
 import { HeldKeysComponent, queueKey } from "../src/keyboarding";
 import {
 	useTheme,
@@ -35,7 +35,7 @@ let delStep = 0;
 let toggleCounter = 0;
 let toggleCounterRef: NodeJS.Timer | void;
 export function ChatInput() {
-	const { mode, chatVal } = useTheme();
+	const { mode, chatVal, chatLog } = useTheme();
 	const setStore = useThemeUpdate();
 	function emptyInput(text: string) {
 		const newVal = " " + text.substr(2 + delStep);
@@ -89,6 +89,31 @@ export function ChatInput() {
 			style={tw`absolute bottom-0 w-full items-center justify-center flex-auto`}
 			behavior={OS === "ios" ? "padding" : "height"}
 		>
+			{
+				/* chatLog */
+				chatLog.map((msg, i) => {
+					return (
+						<View key={i} style={tw``}>
+							<Text
+								style={[
+									tw`text-white`,
+									{
+										textShadowColor: "rgba(0, 0, 0, 0.8)",
+										textShadowOffset: {
+											width: 0,
+											height: 0,
+										},
+										textShadowRadius: 10,
+									},
+								]}
+							>
+								{msg}
+							</Text>
+						</View>
+					);
+				})
+			}
+
 			<HeldKeysComponent setBorderColor={setBorderColor} />
 			<TextInput
 				onPressIn={(e) => {
