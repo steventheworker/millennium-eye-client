@@ -93,7 +93,7 @@ export function ChatInput() {
 				/* chatLog */
 				chatLog.map((msg, i) => {
 					return (
-						<View key={i} style={tw``}>
+						<View key={i} style={tw`w-full`}>
 							<Text
 								style={[
 									tw`text-white`,
