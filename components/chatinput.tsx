@@ -84,6 +84,7 @@ export function ChatInput() {
 	const [borderColor, setBorderColor] = useState(
 		OS === "web" ? webFocus : mobileBlur
 	); //web has auto-focus on input
+	const [selection, setSelection] = useState({ start: 0, end: 0 });
 	return (
 		<KeyboardAvoidingView
 			style={tw`absolute bottom-0 w-full items-center justify-center flex-auto`}
@@ -167,10 +168,17 @@ export function ChatInput() {
 						updateCurrentWorkingMessage(chatVal);
 						if (e.key === "ArrowUp") setPrevHistory();
 						if (e.key === "ArrowDown") setNextHistory();
+						const historyValue = getFromHistory();
 						setStore((prevStore) => ({
 							...prevStore,
-							chatVal: getFromHistory(),
+							chatVal: historyValue,
 						}));
+						setTimeout(() => {
+							setSelection({
+								start: historyValue.length,
+								end: historyValue.length,
+							});
+						});
 					}
 				}}
 				onSubmitEditing={(e) => {
@@ -191,6 +199,10 @@ export function ChatInput() {
 				value={chatVal}
 				selectTextOnFocus={true}
 				autoCorrect={false}
+				selection={selection}
+				onSelectionChange={({
+					nativeEvent: { selection /*, text*/ },
+				}) => setSelection(selection)}
 			/>
 		</KeyboardAvoidingView>
 	);
