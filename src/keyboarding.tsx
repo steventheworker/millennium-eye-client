@@ -246,6 +246,7 @@ export function setNextHistory() {
 export function logMessage(msg: string) {
 	ChatHistory.splice(0, 0, msg);
 	cwm = "";
+	inputIndex = -1;
 }
 export function updateCurrentWorkingMessage(msg: string) {
 	if (inputIndex === -1) cwm = msg;
