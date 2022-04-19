@@ -27,6 +27,15 @@ function findDiff(needle: string, haystack: string) {
 	return diff;
 }
 
+//dblEnterTimeout
+let last_enter_t = 0; // last message sent
+const DBL_ENTER_TIMEOUT = 175; //max time to run between 2 enter's fired (milliseconds)
+function dblEnterTimeout() {
+	const curT = new Date().getTime();
+	if (curT - last_enter_t < DBL_ENTER_TIMEOUT) ws.send("/enter");
+	last_enter_t = curT;
+}
+
 /*
 	ChatInput
 */
@@ -182,13 +191,8 @@ export function ChatInput() {
 					}
 				}}
 				onSubmitEditing={(e) => {
-					if (mode === "command") {
-						//todo: queue Enter key
-						console.log("Enter");
-						return;
-					}
 					const msg = e.nativeEvent.text.trim();
-					if (!msg) return;
+					if (!msg) return dblEnterTimeout();
 					ws.send(msg);
 					logMessage(msg);
 					setStore((prevStore) => ({
